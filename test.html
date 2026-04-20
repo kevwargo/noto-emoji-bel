@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Emoji Font Test</title>
+
+<style>
+@font-face {
+    font-family: "MyEmoji";
+    src: url("./CustomEmoji.ttf") format("truetype");
+}
+
+/* Apply ONLY your font, no fallback */
+.test {
+    font-family: "MyEmoji";
+    font-size: 64px;
+}
+
+/* With fallback (for comparison) */
+.fallback {
+    font-family: "MyEmoji", sans-serif;
+    font-size: 64px;
+}
+</style>
+</head>
+
+<body>
+
+<h2>Forced custom font</h2>
+<div class="test">
+  🇫🇮🇪🇪🇺🇦
+</div>
+
+<h2>With fallback</h2>
+<div class="fallback">
+  🇫🇮🇪🇪🇺🇦
+</div>
+
+</body>
+</html>
