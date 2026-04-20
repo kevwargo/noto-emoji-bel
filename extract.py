@@ -12,7 +12,8 @@ os.makedirs(output_dir, exist_ok=True)
 
 for strike_index, strike in enumerate(cblc.strikes):
     for subtable in strike.indexSubTables:
-        for glyph_name, location in subtable.locations.items():
+        # print(type(subtable.locations), subtable.locations[0])
+        for glyph_name, location in subtable.locations:
             data = cbdt.strikes[strike_index].glyphs[glyph_name]
 
             if hasattr(data, "imageData"):
