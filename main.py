@@ -1,8 +1,13 @@
 #!/usr/bin/env python3
 
-import os
+from pathlib import Path
 
 from fontTools.ttLib import TTFont
+
+SOURCE = "NotoColorEmoji.ttf"
+OUTPUT = "CustomEmoji.ttf"
+SOURCE_BITMAPS = Path("bitmaps/src")
+MODIFIED_BITMAPS = Path("bitmaps/mod")
 
 
 def load_font(path):
@@ -23,11 +28,11 @@ def inspect_font(font):
     print(f"✅ Found {len(cblc.strikes)} strike(s)")
     for i, strike in enumerate(cblc.strikes):
         print(f"  Strike {i}:")
-        for sub in strike.indexSubTables:
-            print(f"    Glyphs: {len(sub.locations)}")
+        for subtable in strike.indexSubTables:
+            print(f"    Glyphs: {len(subtable.locations)} {len(subtable.names)} {dir(subtable)}")
 
 
-def extract_pngs(font, output_dir="extracted_pngs"):
+def extract_pngs(font, output_dir: Path):
     """Extract all PNG glyphs."""
     if "CBDT" not in font or "CBLC" not in font:
         raise ValueError("Font does not contain CBDT/CBLC tables")
@@ -35,25 +40,22 @@ def extract_pngs(font, output_dir="extracted_pngs"):
     cbdt = font["CBDT"]
     cblc = font["CBLC"]
 
-    os.makedirs(output_dir, exist_ok=True)
-
+    output_dir.mkdir(parents=True, exist_ok=True)
     count = 0
 
     for strike_index, strike in enumerate(cblc.strikes):
         for subtable in strike.indexSubTables:
-            for glyph_name in subtable.names:
+            for location, glyph_name in zip(subtable.locations, subtable.names):
                 glyph = cbdt.strikeData[strike_index][glyph_name]
 
                 if hasattr(glyph, "imageData"):
-                    filename = f"{output_dir}/{glyph_name}_s{strike_index}.png"
-                    with open(filename, "wb") as f:
-                        f.write(glyph.imageData)
+                    (output_dir / f"{glyph_name}_s{strike_index}.png").write_bytes(glyph.imageData)
                     count += 1
 
     print(f"✅ Extracted {count} PNGs to '{output_dir}'")
 
 
-def replace_pngs(font, input_dir="modified_pngs"):
+def replace_pngs(font, input_dir: Path):
     """Replace PNG glyphs with modified ones."""
     if "CBDT" not in font or "CBLC" not in font:
         raise ValueError("Font does not contain CBDT/CBLC tables")
@@ -61,26 +63,15 @@ def replace_pngs(font, input_dir="modified_pngs"):
     cbdt = font["CBDT"]
     cblc = font["CBLC"]
 
-    replaced = 0
-
     for strike_index, strike in enumerate(cblc.strikes):
         for subtable in strike.indexSubTables:
             for glyph_name in subtable.names:
-                path = f"{input_dir}/{glyph_name}_s{strike_index}.png"
-
-                if not os.path.exists(path):
+                if not (path := input_dir / f"{glyph_name}_s{strike_index}.png").exists():
                     continue
 
-                with open(path, "rb") as f:
-                    new_data = f.read()
-
-                glyph = cbdt.strikeData[strike_index][glyph_name]
-
-                if hasattr(glyph, "imageData"):
-                    glyph.imageData = new_data
-                    replaced += 1
-
-    print(f"✅ Replaced {replaced} glyph(s)")
+                if hasattr((glyph := cbdt.strikeData[strike_index][glyph_name]), "imageData"):
+                    glyph.imageData = path.read_bytes()
+                    print(f"✅ Replaced {path}")
 
 
 def save_font(font, output_path):
@@ -89,34 +80,21 @@ def save_font(font, output_path):
     print(f"💾 Saved font to '{output_path}'")
 
 
-def unicode_to_glyph(font, codepoint):
-    """Convert Unicode codepoint (int) to glyph name."""
-    cmap = font.getBestCmap()
-    return cmap.get(codepoint, None)
-
-
-def demo_workflow():
-    """Example usage."""
-    font_path = "NotoColorEmoji.ttf"
-    output_font = "CustomEmoji.ttf"
-
-    font = load_font(font_path)
-
+def main():
+    font = load_font(SOURCE)
     inspect_font(font)
+    extract_pngs(font, SOURCE_BITMAPS)
 
-    # Step 1: Extract PNGs
-    extract_pngs(font, "extracted_pngs")
-
-    print("\n👉 Edit PNGs in 'extracted_pngs', copy changed ones to 'modified_pngs'\n")
+    print(f"\n👉 Edit PNGs in {SOURCE_BITMAPS}, copy changed ones to {MODIFIED_BITMAPS}\n")
 
     input("Press Enter after editing PNGs...")
 
     # Step 2: Replace PNGs
-    replace_pngs(font, "modified_pngs")
+    replace_pngs(font, MODIFIED_BITMAPS)
 
     # Step 3: Save
-    save_font(font, output_font)
+    save_font(font, OUTPUT)
 
 
 if __name__ == "__main__":
-    demo_workflow()
+    main()
