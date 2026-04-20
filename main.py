@@ -41,8 +41,8 @@ def extract_pngs(font, output_dir="extracted_pngs"):
 
     for strike_index, strike in enumerate(cblc.strikes):
         for subtable in strike.indexSubTables:
-            for glyph_name in subtable.locations.keys():
-                glyph = cbdt.strikes[strike_index].glyphs[glyph_name]
+            for glyph_name in subtable.names:
+                glyph = cbdt.strikeData[strike_index][glyph_name]
 
                 if hasattr(glyph, "imageData"):
                     filename = f"{output_dir}/{glyph_name}_s{strike_index}.png"
@@ -65,7 +65,7 @@ def replace_pngs(font, input_dir="modified_pngs"):
 
     for strike_index, strike in enumerate(cblc.strikes):
         for subtable in strike.indexSubTables:
-            for glyph_name in subtable.locations.keys():
+            for glyph_name in subtable.names:
                 path = f"{input_dir}/{glyph_name}_s{strike_index}.png"
 
                 if not os.path.exists(path):
@@ -74,7 +74,7 @@ def replace_pngs(font, input_dir="modified_pngs"):
                 with open(path, "rb") as f:
                     new_data = f.read()
 
-                glyph = cbdt.strikes[strike_index].glyphs[glyph_name]
+                glyph = cbdt.strikeData[strike_index][glyph_name]
 
                 if hasattr(glyph, "imageData"):
                     glyph.imageData = new_data
