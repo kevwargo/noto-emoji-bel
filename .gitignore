@@ -12,3 +12,7 @@ wheels/
 *.ttf
 *.ttx
 /bitmaps
+
+/src
+/pkg
+*.pkg.tar.zst
