@@ -7,4 +7,4 @@ Target = usr/share/fonts/*
 [Action]
 Description = Replacing glyph in noto-fonts-emoji...
 When = PostTransaction
-Exec = /usr/bin/ttf-replace-glyph /usr/share/fonts/noto/NotoColorEmoji.ttf /usr/share/fonts/noto-emoji-bel/glyph01574_s0.png
+Exec = /usr/bin/ttf-replace-glyph /usr/share/fonts/noto/NotoColorEmoji.ttf /usr/share/fonts/noto-emoji-bel/belarus_s0.png
